@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "{project_name}"
+name = "qiita_analysis"
 version = "0.1.0"
 description = ""
-authors = ["{your_name} <{your_email}>"]
+authors = ["gsy0911 <yoshiki0911@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 
 [tool.poetry.dev-dependencies]
 jupyterlab = "^2.1.1"
