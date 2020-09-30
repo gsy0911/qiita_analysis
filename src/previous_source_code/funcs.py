@@ -65,15 +65,15 @@ def insert_single_user(psgr, cur, jsonstr):
         psgr.commit()
 
 
-def my_header(authorization):
-    """
-    # get qiita header with specific header
-    """
-    h = {
-        "Authorization": f"Bearer {authorization}",
-        "content-type": "application/json"
-    }
-    return h
+# def my_header(authorization):
+#     """
+#     # get qiita header with specific header
+#     """
+#     h = {
+#         "Authorization": f"Bearer {authorization}",
+#         "content-type": "application/json"
+#     }
+#     return h
 
 
 def insert_item(psgr, cur, json):
@@ -141,35 +141,6 @@ def update_table_count(psgr=None, cur=None, count="0", permanent_id=""):
     except Exception as e:
         print(e)
         psgr.commit()
-
-
-def send_message(value1="This message", value2="is sent", value3="via IFTTT"):
-    url = ""
-    method = "POST"
-    headers = {"Content-Type": "application/json"}
-    obj = {
-        "value1": value1,
-        "value2": value2,
-        "value3": value3
-    }
-    json_data = json.dumps(obj).encode("utf-8")
-
-    # http request and POST
-    request = urllib.request.Request(url, data=json_data, method=method, headers=headers)
-    with urllib.request.urlopen(request) as responce:
-        print(responce)
-
-
-def get_connection():
-    # https://ohke.hateblo.jp/entry/2017/06/23/230000
-    # connection info
-    connection_config = {
-        'host': 'localhost',
-        'database': 'qiita',
-        'user': 'postgres',
-        'password': 'postgres'
-    }
-    return psycopg2.connect(**connection_config)
 
 
 def get_related_tags_with_search_word(search='Python'):
