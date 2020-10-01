@@ -4,7 +4,7 @@ from typing import List
 
 
 class QiitaItem:
-    QIITA_URL_PATTERN = "https://qiita.com/(?P<user_name>\w+)/items/(?P<item_id>\w+)"
+    QIITA_URL_PATTERN = r"https://qiita.com/(?P<user_name>\w+)/items/(?P<item_id>\w+)"
 
     def __init__(self, payload: dict):
         self.rendered_body: str = payload['rendered_body']
@@ -21,6 +21,9 @@ class QiitaItem:
         self.title: str = payload['title']
         self.updated_at: str = payload['updated_at']
         self.url: str = payload['url']
+        # additional
+        self.image_num = self._image_count()
+        self.qiita_refs = self._qiita_ref_count()
 
     def _image_count(self) -> int:
         pattern = r"!\[.*\]\(https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/[0-9]+/[0-9]+/[0-9a-z\-]+.png\)"
@@ -37,8 +40,8 @@ class QiitaItem:
             f"LGTM=[{self.likes_count:>5}]({updated_at.strftime('%Y-%m-%d')})【{self.title}】",
             f"    * tag: {', '.join([i['name'] for i in self.tags])}",
             f"    * length: {len(self.body)}",
-            f"    * image_num: {self._image_count()}",
-            f"    * qiita_refs: {self._qiita_ref_count()}",
+            f"    * image_num: {self.image_num}",
+            f"    * qiita_refs: {self.qiita_refs}",
             f"    * link: {self.url}",
         ]
         return "\n".join(response_list)
