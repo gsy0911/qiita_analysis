@@ -1,6 +1,6 @@
 from datetime import datetime
 import re
-from typing import List
+from typing import List, Union
 
 
 class QiitaItem:
@@ -51,3 +51,20 @@ class QiitaItem:
 
     def __repr__(self):
         return self._to_str()
+
+
+class QiitaItemBox:
+    def __init__(self):
+        self.item_list: List[QiitaItem] = []
+
+    def append(self, item: Union[dict, QiitaItem]):
+        if type(item) is dict:
+            self.item_list.append(QiitaItem(item))
+        elif type(item) is QiitaItem:
+            self.item_list.append(item)
+        else:
+            raise Exception
+
+    def extend(self, item_list: Union[List[dict], List[QiitaItem]]):
+        for item in item_list:
+            self.append(item)
