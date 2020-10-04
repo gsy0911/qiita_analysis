@@ -103,9 +103,32 @@ class QiitaItem:
         return self._to_str()
 
 
+class QiitaUser:
+    def __init__(self, payload: dict):
+        self.description: str = payload['description']
+        self.facebook_id: str = payload['facebook_id']
+        self.followees_count: int = payload['followees_count']
+        self.followers_count: int = payload['followers_count']
+        self.github_login_name: Optional[str] = payload['github_login_name']
+        self.id: int = payload['id']
+        self.items_count: int = payload['items_count']
+        self.linkedin_id: str = payload['linkedin_id']
+        self.location: str = payload['location']
+        self.name: str = payload['name']
+        self.organization = payload['organization']
+        self.permanent_id: int = payload['permanent_id']
+        self.profile_image_url: str = payload['profile_image_url']
+        self.team_only: bool = payload['team_only']
+        self.twitter_screen_name: str = payload['twitter_screen_name']
+        self.website_url: str = payload['website_url']
+
+
 class QiitaItemBox:
     def __init__(self):
         self.item_list: List[QiitaItem] = []
+
+    def dumps(self, body=False) -> List[dict]:
+        return [item.dumps(body=body) for item in self.item_list]
 
     def append(self, item: Union[dict, QiitaItem]):
         if type(item) is dict:
