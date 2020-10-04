@@ -160,16 +160,16 @@ class QiitaItemBox:
         self.item_list: List[QiitaItem] = []
 
     @staticmethod
-    def read_json(path) -> dict:
+    def read_json(path) -> Union[dict, List[dict]]:
         with open(path, "r") as f:
             data = json.load(f)
         return data
 
     def extend_files(self, file_list: list) -> None:
         with mp.Pool(mp.cpu_count()) as pool:
-            result = pool.map(self.read_json, file_list[:50])
+            result = pool.map(self.read_json, file_list)
         for r in result:
-            self.item_list.extend(r)
+            self.extend(r)
 
     def dumps(self, body=False) -> List[dict]:
         return [item.dumps(body=body) for item in self.item_list]
