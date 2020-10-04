@@ -72,13 +72,16 @@ class QiitaItem:
         updated_at = datetime.fromisoformat(self.updated_at)
         response_list = [
             f"LGTM=[{self.likes_count:>5}]({updated_at.strftime('%Y-%m-%d')})【{self.title}】",
-            f"    * tag: {', '.join([i['name'] for i in self.tags])}",
+            f"    * tag: {', '.join(self.get_tags())}",
             f"    * length: {len(self.body)}",
             f"    * image_num: {self.image_num}",
             f"    * qiita_refs: {self.qiita_refs}",
             f"    * link: {self.url}",
         ]
         return "\n".join(response_list)
+
+    def get_tags(self) -> list:
+        return [i['name'] for i in self.tags]
 
     def dumps(self, body=False) -> dict:
         """
