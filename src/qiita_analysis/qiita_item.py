@@ -1,6 +1,6 @@
 from datetime import datetime
 import re
-from typing import List, Union
+from typing import List, Union, Optional
 
 
 class QiitaItem:
@@ -22,6 +22,9 @@ class QiitaItem:
         self.title: str = payload['title']
         self.updated_at: str = payload['updated_at']
         self.url: str = payload['url']
+        self.qiita_user = QiitaUser(payload=payload['user'])
+        self.user_id = self.qiita_user.id
+        self.permanent_id = self.qiita_user.permanent_id
         # additional
         self.image_num = self._image_count()
         self.qiita_refs: List[dict] = self._qiita_refs()
@@ -85,10 +88,13 @@ class QiitaItem:
             "create_at": self.created_at,
             "updated_at": self.updated_at,
             "likes_count": self.likes_count,
+            "tags": self.tags,
             "url": self.url,
             "body_length": len(self.body),
             "image_num": self.image_num,
-            "qiita_refs_count": self.qiita_refs_count
+            "qiita_refs_count": self.qiita_refs_count,
+            "user_id": self.user_id,
+            "permanent_id": self.permanent_id
         }
         if body:
             return_dict['rendered_body'] = self.rendered_body
