@@ -91,6 +91,8 @@ class QiitaItem:
             _tags.append(tags)
         elif type(tags) is list:
             _tags.extend(tags)
+        if not _tags:
+            return True
 
         item_tags = self.get_tags()
         for tag in _tags:
@@ -234,8 +236,8 @@ class QiitaItemBox:
         get qiita_item_list
 
         Args:
-            tags:
-            likes:
+            tags: filter the items which contains `tags`
+            likes: filter the items which has `LGTM` more than `likes`
 
         Returns:
 
