@@ -161,11 +161,32 @@ class QiitaItemBox:
 
     @staticmethod
     def read_json(path) -> Union[dict, List[dict]]:
+        """
+
+        Args:
+            path: a path to the target_json
+
+        Returns:
+            dict contains qiita item information
+        """
         with open(path, "r") as f:
             data = json.load(f)
         return data
 
-    def extend_files(self, file_list: list) -> None:
+    def extend_files(self, file_list: List[str]) -> None:
+        """
+        read json-files using multiprocessing
+
+        Args:
+            file_list: ["./dir/data1.json", ...]
+
+        Returns:
+            None
+
+        Examples:
+            >>> item_box = QiitaItemBox()
+            >>> item_box.extend_files(file_list=["./dir/data1.json", "./dir/data2.json"])
+        """
         with mp.Pool(mp.cpu_count()) as pool:
             result = pool.map(self.read_json, file_list)
         for r in result:
@@ -174,7 +195,16 @@ class QiitaItemBox:
     def dumps(self, body=False) -> List[dict]:
         return [item.dumps(body=body) for item in self.item_list]
 
-    def append(self, item: Union[dict, QiitaItem]):
+    def append(self, item: Union[dict, QiitaItem]) -> None:
+        """
+        append `dict` or `QiitaItem()` to the QiitaItemBox()
+
+        Args:
+            item:
+
+        Returns:
+            None
+        """
         if type(item) is dict:
             self.item_list.append(QiitaItem(item))
         elif type(item) is QiitaItem:
@@ -183,6 +213,15 @@ class QiitaItemBox:
             raise Exception
 
     def extend(self, item_list: Union[List[dict], List[QiitaItem]]):
+        """
+        extend `List[dict]` or List[QiitaItem()]` to the QiitaItemBox()
+
+        Args:
+            item_list:
+
+        Returns:
+            None
+        """
         for item in item_list:
             self.append(item)
 
@@ -190,7 +229,17 @@ class QiitaItemBox:
             self,
             tags: Optional[Union[str, List[str]]] = None,
             likes: Optional[int] = 0
-    ):
+    ) -> List[QiitaItem]:
+        """
+        get qiita_item_list
+
+        Args:
+            tags:
+            likes:
+
+        Returns:
+
+        """
         _tags: List[str] = []
         if tags is not None:
             if type(tags) is str:
