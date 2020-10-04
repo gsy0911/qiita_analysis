@@ -83,6 +83,19 @@ class QiitaItem:
     def get_tags(self) -> list:
         return [i['name'] for i in self.tags]
 
+    def is_tag_exist(self, tags: Union[str, List[str]]) -> bool:
+        _tags = []
+        if type(tags) is str:
+            _tags.append(tags)
+        elif type(tags) is list:
+            _tags.extend(tags)
+
+        item_tags = self.get_tags()
+        for tag in _tags:
+            if tag in item_tags:
+                return True
+        return False
+
     def dumps(self, body=False) -> dict:
         """
 
@@ -158,3 +171,16 @@ class QiitaItemBox:
     def extend(self, item_list: Union[List[dict], List[QiitaItem]]):
         for item in item_list:
             self.append(item)
+
+    def get_item_list(self, tags: Optional[Union[str, List[str]]] = None):
+        _tags: List[str] = []
+        if tags is not None:
+            if type(tags) is str:
+                _tags.append(tags)
+            elif type(tags) is list:
+                _tags.extend(tags)
+
+        return [
+            item for item in self.item_list
+            if item.is_tag_exist(tags=_tags)
+        ]
