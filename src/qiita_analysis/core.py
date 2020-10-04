@@ -16,6 +16,28 @@ class QiitaClient:
         self.qiita_item_box = QiitaItemBox()
 
     def get_item_at(self, target_date: str):
+        """
+
+        Args:
+            target_date:
+
+        Returns:
+
+        Examples:
+            >>> from datetime import datetime, timedelta
+            >>> import json
+            >>> client = QiitaClient(qiita_token="{your_token_here}")
+            >>> start_date = datetime.fromisoformat("2019-01-01")
+            >>> end_date = datetime.fromisoformat("2019-03-31")
+            >>> days = (end_date - start_date).days
+            >>> for d in range(days + 1):
+            >>>     target = (start_date + timedelta(days=d)).strftime("%Y-%m-%d")
+            >>>     data = client.get_item_at(target_date=target)
+            >>>     item_box = QiitaItemBox()
+            >>>     item_box.extend(data)
+            >>>     with open(f"./{target_date}.json", "w") as f:
+            >>>         json.dump(item_box.dumps(True), f, indent=4)
+        """
         result_list = []
         if self.qiita_token is None:
             raise QiitaTokenInvalidError("your Qiita Token is None")
