@@ -5,6 +5,7 @@ from typing import List, Union
 
 class QiitaItem:
     QIITA_URL_PATTERN = r"https://qiita.com/(?P<user_name>\w+)/items/(?P<item_id>\w+)"
+    QIITA_URL_FORMAT = "https://qiita.com/{user_name}/items/{item_id}"
 
     def __init__(self, payload: dict):
         self.rendered_body: str = payload['rendered_body']
@@ -23,16 +24,38 @@ class QiitaItem:
         self.url: str = payload['url']
         # additional
         self.image_num = self._image_count()
-        self.qiita_refs = self._qiita_ref_count()
+        self.qiita_refs: List[dict] = self._qiita_refs()
+        self.qiita_refs_count = len(self.qiita_refs)
 
     def _image_count(self) -> int:
+        """
+        count attached-images in the article.
+
+        Returns:
+
+        """
         pattern = r"!\[.*\]\(https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/[0-9]+/[0-9]+/[0-9a-z\-]+.png\)"
         found_list = re.findall(pattern, self.body)
         return len(found_list)
 
-    def _qiita_ref_count(self) -> int:
+    def _qiita_refs(self) -> List[dict]:
+        """
+        count references only from the Qiita to the Qiita
+
+        Returns:
+
+        """
         found_list = re.findall(self.QIITA_URL_PATTERN, self.body)
-        return len(found_list)
+
+        found_dict = [
+            {
+                "user_name": user_name,
+                "item_id": item_id,
+                "url": self.QIITA_URL_FORMAT.format(user_name=user_name, item_id=item_id)
+            }
+            for user_name, item_id in found_list
+        ]
+        return found_dict
 
     def _to_str(self) -> str:
         updated_at = datetime.fromisoformat(self.updated_at)
@@ -45,6 +68,33 @@ class QiitaItem:
             f"    * link: {self.url}",
         ]
         return "\n".join(response_list)
+
+    def dumps(self, body=False) -> dict:
+        """
+
+        Args:
+            body: Also dumps with `body` and `rendered body`
+
+        Returns:
+
+        """
+
+        return_dict = {
+            "title": self.title,
+            "id": self.id,
+            "create_at": self.created_at,
+            "updated_at": self.updated_at,
+            "likes_count": self.likes_count,
+            "url": self.url,
+            "body_length": len(self.body),
+            "image_num": self.image_num,
+            "qiita_refs_count": self.qiita_refs_count
+        }
+        if body:
+            return_dict['rendered_body'] = self.rendered_body
+            return_dict['body'] = self.body
+
+        return return_dict
 
     def __str__(self):
         return self._to_str()
