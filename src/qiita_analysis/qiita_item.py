@@ -8,23 +8,23 @@ class QiitaItem:
     QIITA_URL_FORMAT = "https://qiita.com/{user_name}/items/{item_id}"
 
     def __init__(self, payload: dict):
-        self.rendered_body: str = payload['rendered_body']
-        self.body: str = payload['body']
-        self.coediting: bool = payload['coediting']
-        self.comments_count: str = payload['comments_count']
-        self.created_at: str = payload['created_at']
-        self.group = payload['group']
-        self.id: str = payload['id']
-        self.likes_count: int = payload['likes_count']
-        self.private: bool = payload['private']
-        self.reactions_count: int = payload['reactions_count']
-        self.tags: List[dict] = payload['tags']
-        self.title: str = payload['title']
-        self.updated_at: str = payload['updated_at']
-        self.url: str = payload['url']
-        self.qiita_user = QiitaUser(payload=payload['user'])
-        self.user_id = self.qiita_user.id
-        self.permanent_id = self.qiita_user.permanent_id
+        self.rendered_body: str = payload.get('rendered_body')
+        self.body: str = payload.get('body')
+        self.coediting: bool = payload.get('coediting')
+        self.comments_count: str = payload.get('comments_count')
+        self.created_at: str = payload.get('created_at')
+        self.group = payload.get('group')
+        self.id: str = payload.get('id')
+        self.likes_count: int = payload.get('likes_count')
+        self.private: bool = payload.get('private')
+        self.reactions_count: int = payload.get('reactions_count')
+        self.tags: List[dict] = payload.get('tags')
+        self.title: str = payload.get('title')
+        self.updated_at: str = payload.get('updated_at')
+        self.url: str = payload.get('url')
+        self.qiita_user = QiitaUser(payload=payload.get('user', {}))
+        self.user_id = payload.get("user_id", self.qiita_user.id)
+        self.permanent_id = payload.get("permanent_id", self.qiita_user.permanent_id)
         # additional
         self.image_num = self._image_count()
         self.qiita_refs: List[dict] = self._qiita_refs()
@@ -37,6 +37,8 @@ class QiitaItem:
         Returns:
 
         """
+        if self.body is None:
+            return 0
         pattern = r"!\[.*\]\(https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/[0-9]+/[0-9]+/[0-9a-z\-]+.png\)"
         found_list = re.findall(pattern, self.body)
         return len(found_list)
@@ -48,6 +50,12 @@ class QiitaItem:
         Returns:
 
         """
+        if self.body is None:
+            return [{
+                "user_name": "",
+                "item_id": "",
+                "url": ""
+            }]
         found_list = re.findall(self.QIITA_URL_PATTERN, self.body)
 
         found_dict = [
@@ -111,22 +119,22 @@ class QiitaItem:
 
 class QiitaUser:
     def __init__(self, payload: dict):
-        self.description: str = payload['description']
-        self.facebook_id: str = payload['facebook_id']
-        self.followees_count: int = payload['followees_count']
-        self.followers_count: int = payload['followers_count']
-        self.github_login_name: Optional[str] = payload['github_login_name']
-        self.id: int = payload['id']
-        self.items_count: int = payload['items_count']
-        self.linkedin_id: str = payload['linkedin_id']
-        self.location: str = payload['location']
-        self.name: str = payload['name']
-        self.organization = payload['organization']
-        self.permanent_id: int = payload['permanent_id']
-        self.profile_image_url: str = payload['profile_image_url']
-        self.team_only: bool = payload['team_only']
-        self.twitter_screen_name: str = payload['twitter_screen_name']
-        self.website_url: str = payload['website_url']
+        self.description: str = payload.get('description')
+        self.facebook_id: str = payload.get('facebook_id')
+        self.followees_count: int = payload.get('followees_count')
+        self.followers_count: int = payload.get('followers_count')
+        self.github_login_name: Optional[str] = payload.get('github_login_name')
+        self.id: int = payload.get('id')
+        self.items_count: int = payload.get('items_count')
+        self.linkedin_id: str = payload.get('linkedin_id')
+        self.location: str = payload.get('location')
+        self.name: str = payload.get('name')
+        self.organization = payload.get('organization')
+        self.permanent_id: int = payload.get('permanent_id')
+        self.profile_image_url: str = payload.get('profile_image_url')
+        self.team_only: bool = payload.get('team_only')
+        self.twitter_screen_name: str = payload.get('twitter_screen_name')
+        self.website_url: str = payload.get('website_url')
 
 
 class QiitaItemBox:
