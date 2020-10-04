@@ -172,7 +172,11 @@ class QiitaItemBox:
         for item in item_list:
             self.append(item)
 
-    def get_item_list(self, tags: Optional[Union[str, List[str]]] = None):
+    def get_item_list(
+            self,
+            tags: Optional[Union[str, List[str]]] = None,
+            likes: Optional[int] = 0
+    ):
         _tags: List[str] = []
         if tags is not None:
             if type(tags) is str:
@@ -182,5 +186,6 @@ class QiitaItemBox:
 
         return [
             item for item in self.item_list
-            if item.is_tag_exist(tags=_tags)
+            if item.is_tag_exist(tags=_tags) and
+            item.likes_count >= likes
         ]
