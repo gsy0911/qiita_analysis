@@ -254,3 +254,15 @@ class QiitaItemBox:
             if item.is_tag_exist(tags=_tags) and
             item.likes_count >= likes
         ]
+
+    def __add__(self, other):
+        new_item_box = QiitaItemBox()
+        new_item_box.extend(self.item_list)
+        new_item_box.extend(other.item_list)
+        return new_item_box
+
+    def __radd__(self, other):
+        return self.__add__(other=other)
+
+    def __len__(self):
+        return len(self.item_list)
