@@ -1,8 +1,14 @@
+import collections
 from datetime import datetime
+import itertools
 import json
 import multiprocessing as mp
 import re
 from typing import List, Union, Optional
+
+import networkx as nx
+import matplotlib
+import matplotlib.pyplot as plt
 
 
 class QiitaItem:
@@ -254,6 +260,56 @@ class QiitaItemBox:
             if item.is_tag_exist(tags=_tags) and
             item.likes_count >= likes
         ]
+
+    def create_tag_graph(
+            self,
+            tags: Union[str, List[str]],
+            common_n: int = 50,
+            weight_more_than: int = 5,
+            font_family: str = "Hiragino Maru Gothic Pro"
+    ):
+        # [ ["tag1", "tag2"], ["tag1"], ["tag3"]]
+        tag_list = []
+        for i in self.get_item_list(tags=tags):
+            tag_list.append(i.get_tags())
+
+        # [('Python', 11433),
+        #  ('Python3', 3085)]
+        tag_count = collections.Counter(itertools.chain.from_iterable(tag_list)).most_common(common_n)
+
+        # add nodes
+        graph = nx.Graph()
+        graph.add_nodes_from([(tag, {"count": count}) for tag, count in tag_count])
+
+        # add edge weight
+        for tags in tag_list:
+            for node0, node1 in itertools.combinations(tags, 2):
+                if not graph.has_node(node0) or not graph.has_node(node1):
+                    continue
+                if graph.has_edge(node0, node1):
+                    graph[node0][node1]["weight"] += 1
+                else:
+                    graph.add_edge(node0, node1, weight=1)
+
+        # remove light-weighted edge
+        remove_edge_list = []
+        for (u, v, d) in graph.edges(data=True):
+            if d["weight"] < weight_more_than:
+                remove_edge_list.append((u, v))
+        for (u, v) in remove_edge_list:
+            graph.remove_edge(u, v)
+
+        # 反発係数とか
+        plt.figure(figsize=(16, 16))
+        pos = nx.spring_layout(graph, k=0.3)
+        # ノードの大きさと日本語
+        node_size = [d["count"] * 10 for (n, d) in graph.nodes(data=True)]
+        nx.draw_networkx_nodes(graph, pos, node_color="w", alpha=0.8, node_size=node_size, edgecolors="g")
+        nx.draw_networkx_labels(graph, pos, font_size=14, font_family=font_family, font_weight="bold")
+        # weightに応じたedgeの太さ
+        edge_width = [d["weight"] * 0.2 for (u, v, d) in graph.edges(data=True)]
+        nx.draw_networkx_edges(graph, pos, alpha=0.4, edge_color="c", width=edge_width)
+        return plt
 
     def __add__(self, other):
         new_item_box = QiitaItemBox()
