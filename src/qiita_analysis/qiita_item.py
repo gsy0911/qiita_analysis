@@ -1,19 +1,24 @@
 import collections
 from datetime import datetime
+import functools
 import itertools
 import json
 import multiprocessing as mp
 import re
 from typing import List, Union, Optional
 
+import spacy
 import networkx as nx
-import matplotlib
 import matplotlib.pyplot as plt
+nlp = spacy.load('ja_ginza')
 
 
 class QiitaItem:
     QIITA_URL_PATTERN = r"https://qiita.com/(?P<user_name>\w+)/items/(?P<item_id>\w+)"
     QIITA_URL_FORMAT = "https://qiita.com/{user_name}/items/{item_id}"
+    IMG_PATTERN = r"!\[.*\]\(https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/[0-9]+/[0-9]+/[0-9a-z\-]+.png\)"
+    LINK_PATTERN = r"\[.*\]\(https?://.+\)"
+    CODE_PATTERN = r"```[\s\w\W]*```"
 
     def __init__(self, payload: dict):
         self.rendered_body: str = payload.get('rendered_body')
@@ -47,8 +52,7 @@ class QiitaItem:
         """
         if self.body is None:
             return 0
-        pattern = r"!\[.*\]\(https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/[0-9]+/[0-9]+/[0-9a-z\-]+.png\)"
-        found_list = re.findall(pattern, self.body)
+        found_list = re.findall(self.IMG_PATTERN, self.body)
         return len(found_list)
 
     def _qiita_refs(self) -> List[dict]:
@@ -141,6 +145,26 @@ class QiitaItem:
 
     def __repr__(self):
         return self._to_str()
+
+    def _body_preprocess(self) -> List[str]:
+        """
+        vector化する前に文書中の、以下の項目を削除する
+        * IMG
+        * LINK
+        * CODE
+
+        Returns:
+
+        """
+        _body = self.body
+        _body = re.sub(self.IMG_PATTERN, "", _body)
+        _body = re.sub(self.LINK_PATTERN, "", _body)
+        _body = re.sub(self.CODE_PATTERN, "", _body)
+
+        body_text = _body.split("\n")
+        body_text = [text for text in body_text if len(text) > 0]
+        return body_text
+
 
 
 class QiitaUser:
