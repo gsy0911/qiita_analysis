@@ -165,6 +165,10 @@ class QiitaItem:
         body_text = [text for text in body_text if len(text) > 0]
         return body_text
 
+    def to_vector(self):
+        body_text = self._body_preprocess()
+        docs = list(nlp.pipe(body_text))
+        return functools.reduce(lambda x, y: x + y, [d.vector for d in docs])
 
 
 class QiitaUser:
