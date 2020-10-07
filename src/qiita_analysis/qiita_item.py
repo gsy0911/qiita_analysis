@@ -7,9 +7,10 @@ import multiprocessing as mp
 import re
 from typing import List, Union, Optional
 
-import spacy
 import networkx as nx
 import matplotlib.pyplot as plt
+import pandas as pd
+import spacy
 nlp = spacy.load('ja_ginza')
 
 
@@ -288,6 +289,26 @@ class QiitaItemBox:
             if item.is_tag_exist(tags=_tags) and
             item.likes_count >= likes
         ]
+
+    def get_as_df(
+            self,
+            tags: Optional[Union[str, List[str]]] = None,
+            likes: Optional[int] = 0
+    ) -> pd.DataFrame:
+        item_list = self.get_item_list(tags=tags, likes=likes)
+        item_dict_list = [item.dumps() for item in item_list]
+        df = pd.DataFrame(item_dict_list)
+
+        # tags is stored as list
+        df = df.explode("tags")
+        df['tag'] = df['tags'].apply(lambda x: x['name'])
+
+        # count tag appeared in the df above
+        tag_count_df = df.groupby("tag", as_index=False).count()
+        tag_count_df = tag_count_df.rename(columns={"id": "tag_count"}).loc[:, ["tag", "tag_count"]]
+
+        merged = pd.merge(df, tag_count_df, on="tag", how="left")
+        return merged
 
     def create_tag_graph(
             self,
