@@ -308,7 +308,8 @@ class QiitaItemBox:
         tag_count_df = tag_count_df.rename(columns={"id": "tag_count"}).loc[:, ["tag", "tag_count"]]
 
         merged = pd.merge(df, tag_count_df, on="tag", how="left")
-        return merged
+        select_cols = ["title", "id", "updated_at", "likes_count", "tag", "tag_count", "body_length", "image_num"]
+        return merged.loc[:, select_cols]
 
     def create_tag_graph(
             self,
