@@ -1,13 +1,25 @@
+import collections
 from datetime import datetime
+import functools
+import itertools
 import json
 import multiprocessing as mp
 import re
 from typing import List, Union, Optional
 
+import networkx as nx
+import matplotlib.pyplot as plt
+import pandas as pd
+import spacy
+nlp = spacy.load('ja_ginza')
+
 
 class QiitaItem:
     QIITA_URL_PATTERN = r"https://qiita.com/(?P<user_name>\w+)/items/(?P<item_id>\w+)"
     QIITA_URL_FORMAT = "https://qiita.com/{user_name}/items/{item_id}"
+    IMG_PATTERN = r"!\[.*\]\(https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/[0-9]+/[0-9]+/[0-9a-z\-]+.png\)"
+    LINK_PATTERN = r"\[.*\]\(https?://.+\)"
+    CODE_PATTERN = r"```[\s\w\W]*```"
 
     def __init__(self, payload: dict):
         self.rendered_body: str = payload.get('rendered_body')
@@ -41,8 +53,7 @@ class QiitaItem:
         """
         if self.body is None:
             return 0
-        pattern = r"!\[.*\]\(https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/[0-9]+/[0-9]+/[0-9a-z\-]+.png\)"
-        found_list = re.findall(pattern, self.body)
+        found_list = re.findall(self.IMG_PATTERN, self.body)
         return len(found_list)
 
     def _qiita_refs(self) -> List[dict]:
@@ -135,6 +146,30 @@ class QiitaItem:
 
     def __repr__(self):
         return self._to_str()
+
+    def _body_preprocess(self) -> List[str]:
+        """
+        vector化する前に文書中の、以下の項目を削除する
+        * IMG
+        * LINK
+        * CODE
+
+        Returns:
+
+        """
+        _body = self.body
+        _body = re.sub(self.IMG_PATTERN, "", _body)
+        _body = re.sub(self.LINK_PATTERN, "", _body)
+        _body = re.sub(self.CODE_PATTERN, "", _body)
+
+        body_text = _body.split("\n")
+        body_text = [text for text in body_text if len(text) > 0]
+        return body_text
+
+    def to_vector(self):
+        body_text = self._body_preprocess()
+        docs = list(nlp.pipe(body_text))
+        return functools.reduce(lambda x, y: x + y, [d.vector for d in docs])
 
 
 class QiitaUser:
@@ -254,6 +289,77 @@ class QiitaItemBox:
             if item.is_tag_exist(tags=_tags) and
             item.likes_count >= likes
         ]
+
+    def get_as_df(
+            self,
+            tags: Optional[Union[str, List[str]]] = None,
+            likes: Optional[int] = 0
+    ) -> pd.DataFrame:
+        item_list = self.get_item_list(tags=tags, likes=likes)
+        item_dict_list = [item.dumps() for item in item_list]
+        df = pd.DataFrame(item_dict_list)
+
+        # tags is stored as list
+        df = df.explode("tags")
+        df['tag'] = df['tags'].apply(lambda x: x['name'])
+
+        # count tag appeared in the df above
+        tag_count_df = df.groupby("tag", as_index=False).count()
+        tag_count_df = tag_count_df.rename(columns={"id": "tag_count"}).loc[:, ["tag", "tag_count"]]
+
+        merged = pd.merge(df, tag_count_df, on="tag", how="left")
+        select_cols = ["title", "id", "updated_at", "likes_count", "tag", "tag_count", "body_length", "image_num"]
+        return merged.loc[:, select_cols]
+
+    def create_tag_graph(
+            self,
+            tags: Union[str, List[str]],
+            common_n: int = 50,
+            weight_more_than: int = 5,
+            font_family: str = "Hiragino Maru Gothic Pro"
+    ):
+        # [ ["tag1", "tag2"], ["tag1"], ["tag3"]]
+        tag_list = []
+        for i in self.get_item_list(tags=tags):
+            tag_list.append(i.get_tags())
+
+        # [('Python', 11433),
+        #  ('Python3', 3085)]
+        tag_count = collections.Counter(itertools.chain.from_iterable(tag_list)).most_common(common_n)
+
+        # add nodes
+        graph = nx.Graph()
+        graph.add_nodes_from([(tag, {"count": count}) for tag, count in tag_count])
+
+        # add edge weight
+        for tags in tag_list:
+            for node0, node1 in itertools.combinations(tags, 2):
+                if not graph.has_node(node0) or not graph.has_node(node1):
+                    continue
+                if graph.has_edge(node0, node1):
+                    graph[node0][node1]["weight"] += 1
+                else:
+                    graph.add_edge(node0, node1, weight=1)
+
+        # remove light-weighted edge
+        remove_edge_list = []
+        for (u, v, d) in graph.edges(data=True):
+            if d["weight"] < weight_more_than:
+                remove_edge_list.append((u, v))
+        for (u, v) in remove_edge_list:
+            graph.remove_edge(u, v)
+
+        # 反発係数とか
+        plt.figure(figsize=(16, 16))
+        pos = nx.spring_layout(graph, k=0.3)
+        # ノードの大きさと日本語
+        node_size = [d["count"] * 10 for (n, d) in graph.nodes(data=True)]
+        nx.draw_networkx_nodes(graph, pos, node_color="w", alpha=0.8, node_size=node_size, edgecolors="g")
+        nx.draw_networkx_labels(graph, pos, font_size=14, font_family=font_family, font_weight="bold")
+        # weightに応じたedgeの太さ
+        edge_width = [d["weight"] * 0.2 for (u, v, d) in graph.edges(data=True)]
+        nx.draw_networkx_edges(graph, pos, alpha=0.4, edge_color="c", width=edge_width)
+        return plt
 
     def __add__(self, other):
         new_item_box = QiitaItemBox()

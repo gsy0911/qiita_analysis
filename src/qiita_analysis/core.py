@@ -1,8 +1,9 @@
 import requests
 from typing import Optional
+import warnings
 
 from .utils import get_item, header
-from .error import QiitaTokenInvalidError, QiitaGetItemError
+from .error import QiitaTokenInvalidError
 from .qiita_item import QiitaItemBox
 
 
@@ -38,9 +39,11 @@ class QiitaClient:
             >>>     with open(f"./{target_date}.json", "w") as f:
             >>>         json.dump(item_box.dumps(True), f, indent=4)
         """
+        def _warn_message(dt, result_len, assumption_len) -> str:
+            return f"{dt}の記事取得数が想定した数と異なります。obtained: {result_len}, assumption: {assumption_len}"
         result_list = []
         if self.qiita_token is None:
-            raise QiitaTokenInvalidError("your Qiita Token is None")
+            raise QiitaTokenInvalidError("Qiita Token is None")
 
         response = get_item(start_date=target_date, end_date=target_date, qiita_token=self.qiita_token)
         self.token_rate_remaining = response.headers['Rate-Remaining']
@@ -52,7 +55,7 @@ class QiitaClient:
         last_url = response.links['last']['url']
         if first_url == last_url:
             if len(result_list) != total_count:
-                raise QiitaGetItemError("想定した数と異なります")
+                warnings.warn(_warn_message(dt=target_date, result_len=len(result_list), assumption_len=total_count))
             self.qiita_item_box.extend(result_list)
             return result_list
         while True:
@@ -64,8 +67,9 @@ class QiitaClient:
                 break
             next_url = response.links['next']['url']
             last_url = response.links['last']['url']
+            total_count = int(response.headers['Total-Count'])
 
         if len(result_list) != total_count:
-            raise QiitaGetItemError("想定した数と異なります")
+            warnings.warn(_warn_message(dt=target_date, result_len=len(result_list), assumption_len=total_count))
         self.qiita_item_box.extend(result_list)
         return result_list

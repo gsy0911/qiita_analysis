@@ -36,7 +36,12 @@ setuptools.setup(
     url="https://github.com/gsy0911/qiita_analysis",
     packages=setuptools.find_packages(),
     install_requires=[
-        "pandas"
+        "pandas",
+        "requests",
+        "ginza",
+        "networkx",
+        "matplotlib",
+        "seaborn"
     ],
     license="MIT",
     classifiers=[
