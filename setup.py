@@ -40,7 +40,8 @@ setuptools.setup(
         "requests",
         "ginza",
         "networkx",
-        "matplotlib"
+        "matplotlib",
+        "seaborn"
     ],
     license="MIT",
     classifiers=[
