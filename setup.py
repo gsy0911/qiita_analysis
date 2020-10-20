@@ -53,6 +53,5 @@ setuptools.setup(
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License"
     ],
-    python_requires='>=3.7',
-    keywords=["keyword", "here"]
+    keywords=["qiita"]
 )
