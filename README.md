@@ -4,6 +4,10 @@ provides easy methods to
 * get Qiita articles items,
 * create tag network graph
 
+## try here
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/gsy0911/qiita_analysis/master?filepath=sample%2Fpublic_sample.ipynb)
+
 ## installation
 
 ```shell script
