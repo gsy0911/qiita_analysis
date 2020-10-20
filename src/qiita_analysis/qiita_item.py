@@ -196,6 +196,14 @@ class QiitaItemBox:
     def __init__(self):
         self.item_list: List[QiitaItem] = []
 
+    def extend_example(self):
+        """
+
+        Returns:
+
+        """
+        self.extend_files(['example_tag_data.json'])
+
     @staticmethod
     def read_json(path) -> Union[dict, List[dict]]:
         """
